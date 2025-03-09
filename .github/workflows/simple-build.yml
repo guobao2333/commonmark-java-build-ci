@@ -2,6 +2,11 @@ name: Manual build
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version'
+        required: true
+        default: '0.24.0'
 
 jobs:
   build:
@@ -12,7 +17,7 @@ jobs:
         with:
           repository: commonmark/commonmark-java
           path: src
-          ref: ${{ github.event.client_payload.ref || 'main' }}
+          ref: "commonmark-parent-${{ inputs.version }}"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
