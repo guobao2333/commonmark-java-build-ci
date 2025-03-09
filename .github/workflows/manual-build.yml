@@ -44,13 +44,18 @@ jobs:
           prerelease: false
 
       - name: Upload Release Assets
+        env:
+          UPLOAD_URL: ${{ steps.create-release.outputs.upload_url }}
         run: |
+          CLEAN_UPLOAD_URL=$(echo "$UPLOAD_URL" | sed 's/{?.*}//')
           for module in ${{ env.MODULES }}; do
-            file="src/$module/target/${module}-${{ inputs.version }}.jar"
-            echo "Uploading $file..."
-            curl -s -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Content-Type: application/java-archive" \
-              --data-binary @"$file" \
-              "${{ steps.create-release.outputs.upload_url }}?name=$(basename $file)"
+            JAR_PATH="src/$module/target/$module-${{ inputs.version }}.jar"
+            JAR_NAME=$(basename "$JAR_PATH")
+            echo "Uploading $JAR_NAME..."
+            curl -sSL \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -F "asset=@$JAR_PATH;type=application/java-archive" \
+              "$CLEAN_UPLOAD_URL?name=$JAR_NAME"
           done
