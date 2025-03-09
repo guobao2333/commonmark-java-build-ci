@@ -30,13 +30,6 @@ jobs:
         working-directory: src
         run: mvn -B clean package -Dsurefire.timeout=60  # 执行Maven打包命令生成JAR
 
-      - name: Debug JAR Path
-        run: |
-          echo "检查 src/ 目录内容："
-          ls -la src/
-          echo "递归列出所有文件（如果目录存在）："
-          ls -laR src/
-
       - name: Create Release
         id: create-release
         uses: actions/create-release@v1

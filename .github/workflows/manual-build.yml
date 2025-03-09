@@ -1,0 +1,56 @@
+name: Manual build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version'
+        required: true
+        default: '0.24.0'
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  MODULES: "commonmark commonmark-ext-footnotes"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: commonmark/commonmark-java
+          path: src
+          ref: "commonmark-parent-${{ inputs.version }}"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: maven
+
+      - name: Build with Maven
+        working-directory: src
+        run: mvn -B clean package -Dsurefire.timeout=60
+
+      - name: Create Release
+        id: create-release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          release_name: ${{ inputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        run: |
+          for module in ${{ env.MODULES }}; do
+            file="src/$module/target/${module}-${{ inputs.version }}.jar"
+            echo "Uploading $file..."
+            curl -s -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/java-archive" \
+              --data-binary @"$file" \
+              "${{ steps.create-release.outputs.upload_url }}?name=$(basename $file)"
+          done
