@@ -1,4 +1,4 @@
-return-voidname: Check update
+name: Check update
 
 on:
   workflow_dispatch:
