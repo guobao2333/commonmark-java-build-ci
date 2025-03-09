@@ -27,7 +27,7 @@ jobs:
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          mvn -B clean package  # 执行Maven打包命令生成JAR
+          mvn -B clean package -Dsurefire.timeout=60  # 执行Maven打包命令生成JAR
 
       - name: Create Release
         id: create-release
@@ -54,3 +54,4 @@ jobs:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: src/target/*.jar
           asset_name: commonmark-java_${{ steps.build.outputs.version }}.jar
+          asset_content_type: application/java-archive
