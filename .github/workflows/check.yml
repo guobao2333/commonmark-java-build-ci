@@ -35,7 +35,7 @@ jobs:
         run: |
           if [ "${{ steps.local.outputs.local_version }}" != "${{ steps.remote.outputs.remote_version }}" ]; then
             echo "🔄 发现新版本: ${{ steps.remote.outputs.remote_version }} (当前: ${{ steps.local.outputs.local_version }})"
-            gh workflow run build.yml -f version=${{ steps.remote.outputs.remote_version }} -f tag=${{ steps.remote.outputs.raw_tag }}
+            gh workflow run build.yml -f version=${{ steps.remote.outputs.remote_version }}
           else
             echo "✅ 已是最新版本: ${{ steps.remote.outputs.remote_version }}"
           fi
