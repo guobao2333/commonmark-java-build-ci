@@ -21,20 +21,18 @@ jobs:
           java-version: 11
           cache: maven  # 缓存Maven依赖加速构建
 
-      - name: Get project version
-        id: version
-        working-directory: ./src
+      - name: Build with Maven
+        id: build
         run: |
+          cd src
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Build with Maven
-        run: mvn -B clean package  # 执行Maven打包命令生成JAR
+          mvn -B clean package  # 执行Maven打包命令生成JAR
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: commonmark-java_${{ steps.version.outputs.version }}.jar
+          name: commonmark-java_${{ steps.build.outputs.version }}.jar
           path: src/target/*.jar  # 上传生成的JAR文件作为构建产物
 
       - name: Upload to GitHub Release
@@ -44,4 +42,4 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: src/target/*.jar
-          asset_name: commonmark-java_${{ steps.version.outputs.version }}.jar
+          asset_name: commonmark-java_${{ steps.build.outputs.version }}.jar
