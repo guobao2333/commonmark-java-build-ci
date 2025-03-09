@@ -1,0 +1,47 @@
+name: Automation Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version (e.g. 0.24.0)'
+        required: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: commonmark/commonmark-java
+          ref: "v${{ inputs.version }}"
+          path: src
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: maven
+
+      - name: Build JAR
+        working-directory: ./src
+        run: mvn -B clean package
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: "v${{ inputs.version }}"
+          release_name: ${{ inputs.version }}
+          draft: false
+
+      - name: Upload Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./src/target/*.jar
+          asset_name: commonmark-java_${{ inputs.version }}.jar

@@ -1,0 +1,40 @@
+return-voidname: Check update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 14 */7 * *'  # 每7天下午两点半检查一次 (UTC+8 22:00)
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get remote version
+        id: remote
+        run: |
+          REMOTE_TAG=$(curl -s https://api.github.com/repos/commonmark/commonmark-java/releases/latest | jq -r .tag_name)
+          CLEAN_VERSION=$(echo "$REMOTE_TAG" | sed 's/commonmark-parent-//')
+          echo "remote_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          echo "raw_tag=$REMOTE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Get local version
+        id: local
+        run: |
+          LOCAL_TITLE=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .name || true)
+          if [[ "$LOCAL_TITLE" =~ commonmark-java[[:space:]]([0-9.]+) ]]; then
+            echo "local_version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "local_version=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compare versions
+        run: |
+          if [ "${{ steps.local.outputs.local_version }}" != "${{ steps.remote.outputs.remote_version }}" ]; then
+            echo "🔄 发现新版本: ${{ steps.remote.outputs.remote_version }} (当前: ${{ steps.local.outputs.local_version }})"
+            gh workflow run build.yml -f version=${{ steps.remote.outputs.remote_version }} -f tag=${{ steps.remote.outputs.raw_tag }}
+          else
+            echo "✅ 已是最新版本: ${{ steps.remote.outputs.remote_version }}"
+          fi
