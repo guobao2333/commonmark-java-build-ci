@@ -3,7 +3,7 @@ name: Check update
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 14 */7 * *'  # 每7天下午两点半检查一次 (UTC+8 22:00)
+    - cron: '0 14 */7 * *'  # Check every 7 days (UTC 14:00 | UTC+8 22:00)
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -17,15 +17,17 @@ jobs:
         id: remote
         run: |
           REMOTE_TAG=$(curl -s https://api.github.com/repos/commonmark/commonmark-java/releases/latest | jq -r .tag_name)
-          CLEAN_VERSION=$(echo "$REMOTE_TAG" | sed 's/commonmark-parent-//')
-          echo "remote_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          REMOTE_VERSION=$(echo "$REMOTE_TAG" | sed 's/commonmark-parent-//')
+          echo "☁️上游版本： v$REMOTE_VERSION"
+          echo "remote_version=$REMOTE_VERSION" >> $GITHUB_OUTPUT
           echo "raw_tag=$REMOTE_TAG" >> $GITHUB_OUTPUT
 
       - name: Get local version
         id: local
         run: |
-          LOCAL_TITLE=$(curl -s --location --fail --show-error "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .name || true)
-          if [[ "$LOCAL_TITLE" =~ commonmark-java[[:space:]]([0-9.]+) ]]; then
+          LOCAL_TAG=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name || true)
+          echo "📦当前版本： $LOCAL_TAG"
+          if [[ "$LOCAL_TAG" =~ v([0-9.]+) ]]; then
             echo "local_version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
           else
             echo "local_version=none" >> $GITHUB_OUTPUT
