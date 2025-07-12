@@ -1,6 +1,7 @@
 # commonmark-java-build-ci
 > [!IMPORTANT]
-> 您应该直接前往[Maven Central](https://central.sonatype.com/namespace/org.commonmark)下载jar，而不需要重新构建。
+> 此仓库已归档并停止维护。  
+> 您应该前往[Maven Central](https://central.sonatype.com/namespace/org.commonmark)获取配置或直接下载jar，而不需要重新构建。
 
 [commonmark-java](https://github.com/commonmark/commonmark-java) 存储库的构建CI，用于自动构建jar。
 
